@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package tictactoe;
+
+service TinyUrlService {
+  rpc Election(ElectionRequest) returns (Emtpy) {}
+  rpc Broadcast(BroadcaseRequest) returns (Emtpy) {}
+
+  rpc FetchClock(Emtpy) returns (FetchClockResponse) {}
+  rpc AdjustClock(AdjustClockRequest) returns (Empty) {}
+}
+
+message ElectionRequest {
+    int32 node_id = 1;
+}
+message AdjustClockRequest {
+    double offset = 1;
+}
+message FetchClockResponse {
+    double timestamp = 1;
+}
+message Emtpy {}
