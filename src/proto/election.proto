@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package tictactoe;
+
+service ElectionService {
+  rpc Election(ElectionRequest) returns (Empty) {}
+  rpc Broadcast(BroadcastRequest) returns (Empty) {}
+
+//   rpc FetchClock(Empty) returns (FetchClockResponse) {}
+//   rpc AdjustClock(AdjustClockRequest) returns (Empty) {}
+}
+
+message ElectionRequest {
+    int32 node_id = 1;
+}
+message BroadcastRequest {
+    int32 node_id = 1;
+}
+message AdjustClockRequest {
+    double offset = 1;
+}
+message FetchClockResponse {
+    double timestamp = 1;
+}
+message Empty {}
