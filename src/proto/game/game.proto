@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+service GameService {
+  rpc set_mark(SetMarkRequest) returns (SetMarkResponse) {}
+  rpc inform(InformRequest) returns (google.protobuf.Empty) {}
+}
+
+message SetMarkRequest {
+    int32 position = 1;
+    int32 server_id = 2;
+}
+
+message SetMarkResponse {
+    string board = 1;
+    bool game_over = 2;
+}
+
+message InformRequest {
+    string message = 1;
+}

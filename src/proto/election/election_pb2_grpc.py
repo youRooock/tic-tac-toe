@@ -2,7 +2,8 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-from src.proto import election_pb2 as src_dot_proto_dot_election__pb2
+import proto.election.election_pb2 as election__pb2
+from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
 class ElectionServiceStub(object):
@@ -14,28 +15,28 @@ class ElectionServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.Election = channel.unary_unary(
-                '/tictactoe.ElectionService/Election',
-                request_serializer=src_dot_proto_dot_election__pb2.ElectionRequest.SerializeToString,
-                response_deserializer=src_dot_proto_dot_election__pb2.Empty.FromString,
+        self.elect = channel.unary_unary(
+                '/ElectionService/elect',
+                request_serializer=election__pb2.ElectionRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
-        self.Broadcast = channel.unary_unary(
-                '/tictactoe.ElectionService/Broadcast',
-                request_serializer=src_dot_proto_dot_election__pb2.BroadcastRequest.SerializeToString,
-                response_deserializer=src_dot_proto_dot_election__pb2.Empty.FromString,
+        self.coordinate = channel.unary_unary(
+                '/ElectionService/coordinate',
+                request_serializer=election__pb2.CoordinationRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
 
 
 class ElectionServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
-    def Election(self, request, context):
+    def elect(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def Broadcast(self, request, context):
+    def coordinate(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -44,19 +45,19 @@ class ElectionServiceServicer(object):
 
 def add_ElectionServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'Election': grpc.unary_unary_rpc_method_handler(
-                    servicer.Election,
-                    request_deserializer=src_dot_proto_dot_election__pb2.ElectionRequest.FromString,
-                    response_serializer=src_dot_proto_dot_election__pb2.Empty.SerializeToString,
+            'elect': grpc.unary_unary_rpc_method_handler(
+                    servicer.elect,
+                    request_deserializer=election__pb2.ElectionRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
-            'Broadcast': grpc.unary_unary_rpc_method_handler(
-                    servicer.Broadcast,
-                    request_deserializer=src_dot_proto_dot_election__pb2.BroadcastRequest.FromString,
-                    response_serializer=src_dot_proto_dot_election__pb2.Empty.SerializeToString,
+            'coordinate': grpc.unary_unary_rpc_method_handler(
+                    servicer.coordinate,
+                    request_deserializer=election__pb2.CoordinationRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'tictactoe.ElectionService', rpc_method_handlers)
+            'ElectionService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
@@ -65,7 +66,7 @@ class ElectionService(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def Election(request,
+    def elect(request,
             target,
             options=(),
             channel_credentials=None,
@@ -75,14 +76,14 @@ class ElectionService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/tictactoe.ElectionService/Election',
-            src_dot_proto_dot_election__pb2.ElectionRequest.SerializeToString,
-            src_dot_proto_dot_election__pb2.Empty.FromString,
+        return grpc.experimental.unary_unary(request, target, '/ElectionService/elect',
+            election__pb2.ElectionRequest.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def Broadcast(request,
+    def coordinate(request,
             target,
             options=(),
             channel_credentials=None,
@@ -92,8 +93,8 @@ class ElectionService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/tictactoe.ElectionService/Broadcast',
-            src_dot_proto_dot_election__pb2.BroadcastRequest.SerializeToString,
-            src_dot_proto_dot_election__pb2.Empty.FromString,
+        return grpc.experimental.unary_unary(request, target, '/ElectionService/coordinate',
+            election__pb2.CoordinationRequest.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

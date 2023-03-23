@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+service ElectionService {
+  rpc FetchClock(google.protobuf.Empty) returns (FetchClockResponse) {}
+  rpc AdjustClock(AdjustClockRequest) returns (google.protobuf.Empty) {}
+}
+
+message AdjustClockRequest {
+    double offset = 1;
+}
+message FetchClockResponse {
+    double timestamp = 1;
+}

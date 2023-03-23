@@ -1,52 +1,42 @@
 import grpc
-import sys
-import os
-import threading
-import random
 import time
-import typer
+from threading import Thread
 from typing import Tuple, List, Dict
-from config import servers
 from concurrent import futures
 from server import Server
+from election_service import ElectionService
+from game_service import GameService
 from command_handlers.list_board_command_handler import Handler
 from command_handlers.list_board_command_handler import ListBoardCommandHandler
 from command_handlers.set_symbol_command_handler import SetSymbolCommandHandler
 from command_handlers.start_game_command_handler import StartGameCommandHandler
-
-def run_server(node_id: int):
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    # tiny_url_pb2_grpc.add_TinyUrlServiceServicer_to_server(TinyUrlController(), server)
-    server.add_insecure_port(f'[::]:{get_leader_port(node_id)}')
-    server.start()
-    print("server is up and running ...")
-    server.wait_for_termination()
-
-def get_leader_port(leader_node_id: int) -> int:
-    return f'5000{leader_node_id}'
 
 def parse_command_and_args(command: str) -> Tuple[str, List[str]]:
     arguments = command.split(' ')
 
     return (arguments[0], arguments[1:])
 
-
 if __name__ == "__main__":
-    print('Select node_id [1,2,3]')
-    node_id = int(input('> '))
-
+    print('Select node_id [0,1,2]')
+    server_id = int(input('> '))
+    game_service = GameService(server_id)
+    election_service = ElectionService(server_id, game_service.start_game)
     handlers: Dict[str, Handler] = {
-        'start-game': StartGameCommandHandler(node_id, [server[0] for server in servers], Server()),
+        'start-game': StartGameCommandHandler(election_service),
         'list-board': ListBoardCommandHandler(),
         'set-symbol': SetSymbolCommandHandler(),
     }
+
+    # we need a new thread in order not to block handling commands
+    Thread(target=Server(server_id, election_service, game_service).start).start()
+
+    time.sleep(1)
 
     print('The app is up and ready to serve commands')
     print('Available commands:')
     print('\tstart-game')
     print('\tset-symbol [position] [O | X]')
     print('\tlist-board')
-
 
     while True:
         command, args = parse_command_and_args(input('> '))
@@ -55,5 +45,6 @@ if __name__ == "__main__":
             print(f'Not supported command')
             continue
 
-        handlers[command].handle(args + [node_id])
+        handlers[command].handle(args + [server_id])
+    
 

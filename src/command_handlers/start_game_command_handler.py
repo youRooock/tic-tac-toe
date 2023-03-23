@@ -1,17 +1,15 @@
 from .handler import Handler
-from ..election_client import ElectionClient
-from ..server import Server
-from ..config import servers
+from election_service import ElectionService
+from config import available_servers
 from typing import List
 
 class StartGameCommandHandler(Handler):
-    def __init__(self, node_id: int, servers: List[int], server: Server):
-        self.election_client = ElectionClient(node_id, servers, server.on_elected)
+    def __init__(self, election_service: ElectionService):
+        self.election_service = election_service
 
     def handle(self, args):
-       node_id = args[0]
-
-       self.election_client.elect()
-
-    def start_server():
-        pass
+        # ToDo:
+        # syck clock should happen here as well
+        # we can pass another callback to trigger clock sync
+        # see how it's done for game callback
+        return self.election_service.initiate()

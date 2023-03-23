@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+service ElectionService {
+  rpc elect(ElectionRequest) returns (google.protobuf.Empty) {}
+  rpc coordinate(CoordinationRequest) returns (google.protobuf.Empty) {}
+}
+
+message ElectionRequest {
+    int32 node_id = 1;
+}
+
+message CoordinationRequest {
+    int32 leader_id = 1;
+}

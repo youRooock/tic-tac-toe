@@ -38,5 +38,6 @@ class TicTacToeBoard:
 
         return False
     
-    def get_cells(self):
-        return self.cell
+    def __str__(self) -> str:
+        #ToDo: fancy board convertion to string in order to send to players
+        pass
