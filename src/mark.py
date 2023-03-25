@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class Mark(Enum):
-   X = "x"
-   O = "o"
+    X = "x"
+    O = "o"

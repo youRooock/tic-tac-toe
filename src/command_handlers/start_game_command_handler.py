@@ -1,7 +1,10 @@
-from .handler import Handler
-from election_service import ElectionService
-from config import available_servers
 from typing import List
+
+from config import available_servers
+from election_service import ElectionService
+
+from .handler import Handler
+
 
 class StartGameCommandHandler(Handler):
     def __init__(self, election_service: ElectionService):

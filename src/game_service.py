@@ -1,13 +1,16 @@
-from proto.game.game_pb2_grpc import GameServiceServicer, GameServiceStub
-import proto.game.game_pb2 as game_pb2
-from game import Game
 from random import shuffle
-from player import Player
-from mark import Mark
-from utils import find_next
-from config import available_servers
-from google.protobuf.empty_pb2 import Empty
+
 import grpc
+from google.protobuf.empty_pb2 import Empty
+
+import proto.game.game_pb2 as game_pb2
+from config import available_servers
+from game import Game
+from mark import Mark
+from player import Player
+from proto.game.game_pb2_grpc import GameServiceServicer, GameServiceStub
+from utils import find_next
+
 
 class GameService(GameServiceServicer):
     def __init__(self, server_id: int) -> None:
@@ -29,7 +32,7 @@ class GameService(GameServiceServicer):
         print("okay, I'm starting!")
 
         return Empty()
-    
+
     def set_user_turn(self):
         pass
         # ToDo: this method should be called in Set Symbol handler
@@ -44,10 +47,11 @@ class GameService(GameServiceServicer):
         # 1. if it's a host -- return current game board
         # 2. if it's a player -- probably add another rpc to game.proto and retrieve from the host current board
 
-
     def start_game(self):
-        print('The game has started!')
+        print("The game has started!")
         start_player = self.player_one if self.player_one.mark == Mark.X else self.player_two
         with grpc.insecure_channel(available_servers[start_player.id]) as channel:
             stub = GameServiceStub(channel)
-            return stub.inform(game_pb2.InformRequest(message='Please start!')) # ToDo: send here board string representation
+            return stub.inform(
+                game_pb2.InformRequest(message="Please start!")
+            )  # ToDo: send here board string representation

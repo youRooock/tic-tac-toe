@@ -1,17 +1,22 @@
-import grpc
 from concurrent import futures
-from proto.election.election_pb2_grpc import add_ElectionServiceServicer_to_server
-from proto.game.game_pb2_grpc import add_GameServiceServicer_to_server
+
+import grpc
+
+from config import available_servers
 from election_service import ElectionService
 from game_service import GameService
-from config import available_servers
+from proto.election.election_pb2_grpc import add_ElectionServiceServicer_to_server
+from proto.game.game_pb2_grpc import add_GameServiceServicer_to_server
+
 
 class Server:
-    def __init__(self, server_id: int, election_service: ElectionService, game_service: GameService) -> None:
+    def __init__(
+        self, server_id: int, election_service: ElectionService, game_service: GameService
+    ) -> None:
         self.server_id = server_id
         self.election_service = election_service
         self.game_service = game_service
-    
+
     def start(self):
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
         add_ElectionServiceServicer_to_server(self.election_service, server)

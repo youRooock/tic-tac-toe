@@ -1,5 +1,5 @@
-from tic_tac_toe_board import TicTacToeBoard
 from player import Player
+from tic_tac_toe_board import TicTacToeBoard
 
 
 class Game:
@@ -11,8 +11,8 @@ class Game:
 
     def set_mark(self, position: int, player: Player) -> None:
         if player == self.prev_move_by:
-            raise Exception('Player cannot have two moves in a row')
-        
+            raise Exception("Player cannot have two moves in a row")
+
         self.prev_move_by = player
         self.board.set_cell(player.mark, position)
 
