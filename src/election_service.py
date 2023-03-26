@@ -13,13 +13,20 @@ from utils import find_next
 
 
 class ElectionService(ElectionServiceServicer):
-    def __init__(self, server_id: int, start_game_callback, sync_clock_callback) -> None:
+    def __init__(self, server_id: int) -> None:
         self.server_id = server_id
         self.leader_id = -1
         self.election_is_done = False
 
+        self.start_game_callback = None
+        self.sync_clock_callback = None
+
+    def configure(self, start_game_callback, sync_clock_callback):
         self.start_game_callback = start_game_callback
         self.sync_clock_callback = sync_clock_callback
+
+    def get_leader_id(self):
+        return self.leader_id
 
     def elect(self, request, context):
         candidate_id = request.node_id
@@ -38,13 +45,15 @@ class ElectionService(ElectionServiceServicer):
     def coordinate(self, request, context):
         self.leader_id = request.leader_id
 
-        response = self._send_coordination_message(find_next(self.server_id), leader_id)
+        response = self._send_coordination_message(find_next(self.server_id), self.leader_id)
 
         if self.leader_id == self.server_id:
             if self.election_is_done:
                 print(f"All nodes agreed on {self.server_id} to be a leader")
                 self.sync_clock_callback()  # clock sync by Berkeley
-                self.start_game_callback()  # game creation
+                self.start_game_callback(
+                    self.leader_id, list(available_servers.values())
+                )  # game creation #TODO: send only active servers as participants
                 return Empty()
             else:
                 self.election_is_done = True
