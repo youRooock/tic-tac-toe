@@ -1,15 +1,13 @@
-import grpc
 import time
-from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed, wait
+from datetime import datetime
+
+import grpc
 from google.protobuf.empty_pb2 import Empty
 
 from config import available_servers
 from proto.clock.clock_pb2 import AdjustClockRequest, FetchClockResponse
-from proto.clock.clock_pb2_grpc import (
-    ClockServiceStub,
-    ClockServiceServicer,
-)
+from proto.clock.clock_pb2_grpc import ClockServiceServicer, ClockServiceStub
 
 # implementation of the ring election algorithm
 

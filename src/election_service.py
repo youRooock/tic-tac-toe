@@ -3,10 +3,7 @@ from google.protobuf.empty_pb2 import Empty
 
 from config import available_servers
 from proto.election.election_pb2 import CoordinationRequest, ElectionRequest
-from proto.election.election_pb2_grpc import (
-    ElectionServiceServicer,
-    ElectionServiceStub,
-)
+from proto.election.election_pb2_grpc import ElectionServiceServicer, ElectionServiceStub
 from utils import find_next
 
 # implementation of the ring election algorithm

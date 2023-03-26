@@ -4,13 +4,14 @@ from threading import Thread
 from typing import Dict, List, Tuple
 
 import grpc
+
 from clock_service import ClockService
 from command_handlers import (
     Handler,
     ListBoardCommandHandler,
+    SetNodeTimeCommandHandler,
     SetSymbolCommandHandler,
     StartGameCommandHandler,
-    SetNodeTimeCommandHandler,
 )
 from election_service import ElectionService
 from game_service import GameService
