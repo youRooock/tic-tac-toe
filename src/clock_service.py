@@ -1,11 +1,12 @@
 import grpc
+import time
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed, wait
 from google.protobuf.empty_pb2 import Empty
 
 from config import available_servers
-from proto.clock.clock import AdjustClockRequest, FetchClockResponse
-from proto.clock.clock_grpc import (
+from proto.clock.clock_pb2 import AdjustClockRequest, FetchClockResponse
+from proto.clock.clock_pb2_grpc import (
     ClockServiceStub,
     ClockServiceServicer,
 )
@@ -25,13 +26,13 @@ class ClockService(ClockServiceServicer):
 
     def adjust_clock(self, request, context):
         self._offset += request.offset
-        return ring_pb2.Empty()
+        return Empty()
 
     def sync_clock(self):
         def get_time(server_id):
             try:
                 start = time.time()
-                self._send_fetch_clock_message(server_id)
+                response = self._send_fetch_clock_message(server_id)
                 rtt = (time.time() - start) / 2
                 return server_id, rtt + response.time
             except grpc.RpcError:
