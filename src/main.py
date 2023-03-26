@@ -12,6 +12,7 @@ from command_handlers import (
     SetNodeTimeCommandHandler,
     SetSymbolCommandHandler,
     StartGameCommandHandler,
+    SetTimeOutCommandHandler,
 )
 from election_service import ElectionService
 from game_service import GameService
@@ -49,6 +50,7 @@ if __name__ == "__main__":
         "list-board": ListBoardCommandHandler(game_service),
         "set-symbol": SetSymbolCommandHandler(game_service),
         "set-node-time": SetNodeTimeCommandHandler(clock_service),
+        "set-time-out": SetTimeOutCommandHandler(game_service)
     }
 
     # we need a new thread in order not to block handling commands
@@ -62,6 +64,7 @@ if __name__ == "__main__":
     print("\tset-symbol [position]")
     print("\tlist-board")
     print("\tset-node-time [server-id] [hh:mm:ss]")
+    print("\tset-time-out [game-master | players] [min]")
 
     while True:
         command, args = parse_command_and_args(input("> "))

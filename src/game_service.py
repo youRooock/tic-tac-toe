@@ -1,6 +1,8 @@
 import random
 
 import grpc
+import time
+from threading import Thread, Event
 from google.protobuf.empty_pb2 import Empty
 
 from config import available_servers
@@ -11,6 +13,7 @@ from proto.game.game_pb2 import InformMessage, SetMarkRequest
 from proto.game.game_pb2_grpc import GameServiceServicer, GameServiceStub
 from utils import find_next
 
+DEFAULT_TIME_OUT_MINS = 1
 
 class GameService(GameServiceServicer):
     def __init__(self, server_id: int) -> None:
@@ -21,6 +24,7 @@ class GameService(GameServiceServicer):
 
         self.get_local_time = None
         self.get_game_master_id = None
+        self.time_out = DEFAULT_TIME_OUT_MINS * 60
 
     def configure(self, get_time_function, get_game_master_id):
         self.get_local_time = get_time_function
@@ -39,7 +43,8 @@ class GameService(GameServiceServicer):
             self.game.set_mark(request.timestamp, request.position, player)
         except Exception as e:
             raise grpc.RpcError(str(e))
-
+        
+        self.last_player_action_at = time.time()
         board_repr = str(self.game.board)
         if self.game.is_finished():
             winner = self.game.winner
@@ -102,6 +107,10 @@ class GameService(GameServiceServicer):
     def initiate(self, potential_player_ids):
         if len(potential_player_ids) < 2:
             raise Exception("Not enough players to start a game!")
+        
+        self.timer_thread = Thread(target=self._master_timer_job, args=(DEFAULT_TIME_OUT_MINS * 60,))
+        self.last_player_action_at = time.time()
+        self.timer_thread.start()
 
         print("The game has started!")
         player_X, player_O = [
@@ -116,6 +125,24 @@ class GameService(GameServiceServicer):
         self._send_start_game_message(
             self.game.player_O.id, "The game has started! Player O, please standby!"
         )
+
+    def refresh_timer(self, role, timeout_in_mins):
+        if role == 'players' and not self.is_player:
+            self.time_out = timeout_in_mins * 60
+            print(f'Set players timeout to {timeout_in_mins} mins')
+
+    def _master_timer_job(self, timeout):
+        while True:
+            diff = time.time() - self.last_player_action_at
+            if diff > self.time_out:
+                if not self.game.is_finished():
+                    print('The game has timed out!')
+
+                    for p in self.game.players:
+                        self._send_end_game_message(p.id, 'The game has timed out!') 
+                    self.game = None
+                break
+            time.sleep(1)
 
     def _create_stub(self, channel) -> GameServiceStub:
         return GameServiceStub(channel)
