@@ -52,7 +52,7 @@ if __name__ == "__main__":
     }
 
     # we need a new thread in order not to block handling commands
-    Thread(target=Server(server_id, election_service, game_service).start).start()
+    Thread(target=Server(server_id, election_service, game_service, clock_service).start).start()
 
     time.sleep(1)
 

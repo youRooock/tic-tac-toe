@@ -42,14 +42,12 @@ class ElectionService(ElectionServiceServicer):
     def coordinate(self, request, context):
         self.leader_id = request.leader_id
 
-        response = self._send_coordination_message(find_next(self.server_id), self.leader_id)
-
         if self.leader_id == self.server_id:
             if self.election_is_done:
                 print(f"All nodes agreed on {self.server_id} to be a leader")
-                self.sync_clock_callback()  # clock sync by Berkeley
+                # self.sync_clock_callback()  # clock sync by Berkeley # TODO: doesn't work :(
                 self.start_game_callback(
-                    self.leader_id, list(available_servers.values())
+                    [pid for pid in available_servers if pid != self.server_id]
                 )  # game creation #TODO: send only active servers as participants
                 return Empty()
             else:
@@ -57,10 +55,10 @@ class ElectionService(ElectionServiceServicer):
         else:
             print(f"New leader is {self.leader_id}")
 
-        return response
+        return self._send_coordination_message(find_next(self.server_id), self.leader_id)
 
     def initiate(self):
-        return self._send_election_message(find_next(self.server_id), self.server_id)
+        self._send_election_message(find_next(self.server_id), self.server_id)
 
     def _create_stub(self, channel) -> ElectionServiceStub:
         return ElectionServiceStub(channel)
@@ -71,6 +69,6 @@ class ElectionService(ElectionServiceServicer):
             return self._create_stub(channel).coordinate(CoordinationRequest(leader_id=leader_id))
 
     def _send_election_message(self, server_id, leader_id):
-        print(f"Sending selection message to server {server_id} with leader_id {leader_id}")
+        print(f"Sending election message to server {server_id} with leader_id {leader_id}")
         with grpc.insecure_channel(available_servers[server_id]) as channel:
             return self._create_stub(channel).elect(ElectionRequest(node_id=leader_id))

@@ -8,9 +8,9 @@ service ClockService {
 }
 
 message AdjustClockRequest {
-    double offset = 1;
+  double offset = 1;
 }
 
 message FetchClockResponse {
-    double timestamp = 1;
+  double timestamp = 1;
 }

@@ -3,20 +3,19 @@ syntax = "proto3";
 import "google/protobuf/empty.proto";
 
 service GameService {
-  rpc set_mark(SetMarkRequest) returns (SetMarkResponse) {}
-  rpc inform(InformRequest) returns (google.protobuf.Empty) {}
+  rpc set_mark(SetMarkRequest) returns (InformMessage) {}
+  rpc inform(InformMessage) returns (google.protobuf.Empty) {}
+  rpc start_game(InformMessage) returns (google.protobuf.Empty) {}
+  rpc end_game(InformMessage) returns (google.protobuf.Empty) {}
+  rpc get_board(google.protobuf.Empty) returns (InformMessage) {}
 }
 
 message SetMarkRequest {
     int32 position = 1;
     int32 server_id = 2;
+    double timestamp = 3;
 }
 
-message SetMarkResponse {
-    string board = 1;
-    bool game_over = 2;
-}
-
-message InformRequest {
+message InformMessage {
     string message = 1;
 }
