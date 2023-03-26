@@ -5,9 +5,13 @@ from typing import Dict, List, Tuple
 
 import grpc
 from clock_service import ClockService
-from command_handlers.list_board_command_handler import Handler, ListBoardCommandHandler
-from command_handlers.set_symbol_command_handler import SetSymbolCommandHandler
-from command_handlers.start_game_command_handler import StartGameCommandHandler
+from command_handlers import (
+    Handler,
+    ListBoardCommandHandler,
+    SetSymbolCommandHandler,
+    StartGameCommandHandler,
+    SetNodeTimeCommandHandler,
+)
 from election_service import ElectionService
 from game_service import GameService
 from server import Server
@@ -22,17 +26,28 @@ def parse_command_and_args(command: str) -> Tuple[str, List[str]]:
 if __name__ == "__main__":
     print("Select node_id [0,1,2]")
     server_id = int(input("> "))
+
     clock_service = ClockService(server_id)
-    game_service = GameService(server_id, get_time_function=clock_service.get_local_time)
-    election_service = ElectionService(
-        server_id,
-        start_game_callback=game_service.start_game,
+    game_service = GameService(server_id)
+    election_service = ElectionService(server_id)
+
+    clock_service.configure(
+        get_leader_id=election_service.get_leader_id,
+    )
+    game_service.configure(
+        get_time_function=clock_service.get_local_time,
+        get_game_master_id=election_service.get_leader_id,
+    )
+    election_service.configure(
+        start_game_callback=game_service.initiate,
         sync_clock_callback=clock_service.sync_clock,
     )
+
     handlers: Dict[str, Handler] = {
         "start-game": StartGameCommandHandler(election_service),
-        "list-board": ListBoardCommandHandler(),
-        "set-symbol": SetSymbolCommandHandler(),
+        "list-board": ListBoardCommandHandler(game_service),
+        "set-symbol": SetSymbolCommandHandler(game_service),
+        "set-node-time": SetNodeTimeCommandHandler(clock_service),
     }
 
     # we need a new thread in order not to block handling commands
@@ -43,8 +58,9 @@ if __name__ == "__main__":
     print("The app is up and ready to serve commands")
     print("Available commands:")
     print("\tstart-game")
-    print("\tset-symbol [position] [O | X]")
+    print("\tset-symbol [position]")
     print("\tlist-board")
+    print("\tset-node-time [server-id] [hh:mm:ss]")
 
     while True:
         command, args = parse_command_and_args(input("> "))
