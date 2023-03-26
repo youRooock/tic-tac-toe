@@ -27,8 +27,6 @@ class GameService(GameServiceServicer):
         self.get_game_master_id = get_game_master_id
 
     def set_mark(self, request, context):
-        # ToDo: implement
-        # modify game object, return to the caller string board,  make decision about winner, inform the second player with the actual board
         if not self.game:
             raise grpc.RpcError("Sory, the game is not in progress!")
         if self.server_id != self.get_game_master_id():
@@ -51,6 +49,7 @@ class GameService(GameServiceServicer):
                     f"The game has finished! The winner is {winner.mark.value} ({winner.id})! Board:\n{board_repr}",
                 )
             self.game = None
+            return InformMessage(message="")
         else:
             self._send_inform_message(
                 self.game.get_opposite_player(player).id,
@@ -80,10 +79,6 @@ class GameService(GameServiceServicer):
         return InformMessage(f"Board:\n{str(self.game.board)}")
 
     def set_user_turn(self, position):
-        # ToDo: this method should be called in Set Symbol handler
-        # it should:
-        # 1. make rpc set_mark call
-        # 2. print board after the move
         try:
             resp = self._send_set_mark_message(
                 server_id=self.get_game_master_id(), position=position
@@ -93,11 +88,6 @@ class GameService(GameServiceServicer):
             print(str(e))
 
     def list_board(self):
-        pass
-        # ToDo: this method should be called in list board handler
-        # it should:
-        # 1. if it's a host -- return current game board
-        # 2. if it's a player -- probably add another rpc to game.proto and retrieve from the host current board
         if not self.game and not self.is_player:
             print("Game is not in progress!")
         elif self.server_id == self.get_game_master_id():

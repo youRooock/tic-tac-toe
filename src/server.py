@@ -29,7 +29,6 @@ class Server:
         add_ElectionServiceServicer_to_server(self.election_service, server)
         add_GameServiceServicer_to_server(self.game_service, server)
         add_ClockServiceServicer_to_server(self.clock_service, server)
-        # ToDo: register here sync_clock_servicer
         server.add_insecure_port(available_servers[self.server_id])
         server.start()
         print(f"server {self.server_id} is up and running ...")

@@ -30,7 +30,7 @@ class ClockService(ClockServiceServicer):
             start = time.time()
             response = self._send_fetch_clock_message(server_id)
             rtt = (time.time() - start) / 2
-            return server_id, rtt + response.time
+            return server_id, rtt + response.timestamp
         except grpc.RpcError:
             return server_id, None
 

@@ -45,7 +45,7 @@ class ElectionService(ElectionServiceServicer):
         if self.leader_id == self.server_id:
             if self.election_is_done:
                 print(f"All nodes agreed on {self.server_id} to be a leader")
-                # self.sync_clock_callback()  # clock sync by Berkeley # TODO: doesn't work :(
+                self.sync_clock_callback()
                 self.start_game_callback(
                     [pid for pid in available_servers if pid != self.server_id]
                 )  # game creation #TODO: send only active servers as participants

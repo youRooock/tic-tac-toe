@@ -41,6 +41,10 @@ class TicTacToeBoard:
 
         return False
 
-    def __str__(self) -> str:
-        # ToDo: fancy board convertion to string in order to send to players
-        return str(self.cells)
+    def __str__(self):
+        rows = []
+        for i in range(0, 9, 3):
+            row = " | ".join([str(x) if x else '.' for x in self.cells[i:i+3]])
+            rows.append(row)
+        board_str = "\n---------\n".join(rows)
+        return board_str
