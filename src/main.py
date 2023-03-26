@@ -4,7 +4,7 @@ from threading import Thread
 from typing import Dict, List, Tuple
 
 import grpc
-
+from clock_service import ClockService
 from command_handlers.list_board_command_handler import Handler, ListBoardCommandHandler
 from command_handlers.set_symbol_command_handler import SetSymbolCommandHandler
 from command_handlers.start_game_command_handler import StartGameCommandHandler
@@ -22,8 +22,13 @@ def parse_command_and_args(command: str) -> Tuple[str, List[str]]:
 if __name__ == "__main__":
     print("Select node_id [0,1,2]")
     server_id = int(input("> "))
-    game_service = GameService(server_id)
-    election_service = ElectionService(server_id, start_game_callback=game_service.start_game)
+    clock_service = ClockService(server_id)
+    game_service = GameService(server_id, get_time_function=clock_service.get_local_time)
+    election_service = ElectionService(
+        server_id,
+        start_game_callback=game_service.start_game,
+        sync_clock_callback=clock_service.sync_clock,
+    )
     handlers: Dict[str, Handler] = {
         "start-game": StartGameCommandHandler(election_service),
         "list-board": ListBoardCommandHandler(),

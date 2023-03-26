@@ -13,13 +13,13 @@ from utils import find_next
 
 
 class ElectionService(ElectionServiceServicer):
-    def __init__(self, server_id: int, start_game_callback) -> None:
+    def __init__(self, server_id: int, start_game_callback, sync_clock_callback) -> None:
         self.server_id = server_id
-        self.num_of_processes = len(available_servers)
-        self.servers = available_servers
-        self.start_game_callback = start_game_callback
         self.leader_id = -1
         self.election_is_done = False
+
+        self.start_game_callback = start_game_callback
+        self.sync_clock_callback = sync_clock_callback
 
     def elect(self, request, context):
         candidate_id = request.node_id
@@ -30,18 +30,20 @@ class ElectionService(ElectionServiceServicer):
             print("Starting coordination process ...")
             return self._send_coordination_message(find_next(self.server_id), self.leader_id)
 
+        # TODO: this implementation doesn't account for when a node goes down
         return self._send_election_message(
             find_next(self.server_id), max(self.server_id, candidate_id)
         )
 
     def coordinate(self, request, context):
-        leader_id = request.leader_id
-        self.leader_id = leader_id
+        self.leader_id = request.leader_id
 
-        if leader_id == self.server_id:
+        response = self._send_coordination_message(find_next(self.server_id), leader_id)
+
+        if self.leader_id == self.server_id:
             if self.election_is_done:
                 print(f"All nodes agreed on {self.server_id} to be a leader")
-                # ToDo: probably suitable place for placing sync_clock_callback
+                self.sync_clock_callback()  # clock sync by Berkeley
                 self.start_game_callback()  # game creation
                 return Empty()
             else:
@@ -49,7 +51,7 @@ class ElectionService(ElectionServiceServicer):
         else:
             print(f"New leader is {self.leader_id}")
 
-        return self._send_coordination_message(find_next(self.server_id), leader_id)
+        return response
 
     def initiate(self):
         return self._send_election_message(find_next(self.server_id), self.server_id)
