@@ -1,8 +1,8 @@
 import random
+import time
+from threading import Event, Thread
 
 import grpc
-import time
-from threading import Thread, Event
 from google.protobuf.empty_pb2 import Empty
 
 from config import available_servers
@@ -13,7 +13,9 @@ from proto.game.game_pb2 import InformMessage, SetMarkRequest
 from proto.game.game_pb2_grpc import GameServiceServicer, GameServiceStub
 from utils import find_next
 
-DEFAULT_TIME_OUT_MINS = 1
+DEFAULT_PLAYER_TIME_OUT_MINS = 3
+DEFAULT_GAME_MASTER_TIME_OUT_MINS = 1
+
 
 class GameService(GameServiceServicer):
     def __init__(self, server_id: int) -> None:
@@ -22,13 +24,23 @@ class GameService(GameServiceServicer):
         self.game = None
         self.is_player = False
 
+        self.last_game_event_at = None
+        self.timer_thread = None
+        self.player_time_out = DEFAULT_PLAYER_TIME_OUT_MINS * 60
+        self.game_master_time_out = DEFAULT_GAME_MASTER_TIME_OUT_MINS * 60
+
         self.get_local_time = None
         self.get_game_master_id = None
-        self.time_out = DEFAULT_TIME_OUT_MINS * 60
 
     def configure(self, get_time_function, get_game_master_id):
         self.get_local_time = get_time_function
         self.get_game_master_id = get_game_master_id
+
+    def reset(self):
+        self.game = None
+        self.is_player = False
+        self.last_game_event_at = None
+        self.timer_thread = None
 
     def set_mark(self, request, context):
         if not self.game:
@@ -43,8 +55,8 @@ class GameService(GameServiceServicer):
             self.game.set_mark(request.timestamp, request.position, player)
         except Exception as e:
             raise grpc.RpcError(str(e))
-        
-        self.last_player_action_at = time.time()
+        self._register_game_event()
+
         board_repr = str(self.game.board)
         if self.game.is_finished():
             winner = self.game.winner
@@ -53,7 +65,7 @@ class GameService(GameServiceServicer):
                     p.id,
                     f"The game has finished! The winner is {winner.mark.value} ({winner.id})! Board:\n{board_repr}",
                 )
-            self.game = None
+            self.reset()
             return InformMessage(message="")
         else:
             self._send_inform_message(
@@ -66,15 +78,19 @@ class GameService(GameServiceServicer):
     def start_game(self, request, context):
         print(request.message)
         self.is_player = True
+        self._register_game_event()
+        self._start_timeout_timer()
         return Empty()
 
     def end_game(self, request, context):
         print(request.message)
-        self.is_player = False
+        self.reset()
         return Empty()
 
     def inform(self, request, context):
-        print(request.message)
+        if self.is_player:
+            self._register_game_event()
+            print(request.message)
         return Empty()
 
     def get_board(self, request, context):
@@ -88,6 +104,7 @@ class GameService(GameServiceServicer):
             resp = self._send_set_mark_message(
                 server_id=self.get_game_master_id(), position=position
             )
+            self._register_game_event()
             print(resp.message)
         except grpc.RpcError as e:
             print(str(e))
@@ -107,10 +124,6 @@ class GameService(GameServiceServicer):
     def initiate(self, potential_player_ids):
         if len(potential_player_ids) < 2:
             raise Exception("Not enough players to start a game!")
-        
-        self.timer_thread = Thread(target=self._master_timer_job, args=(DEFAULT_TIME_OUT_MINS * 60,))
-        self.last_player_action_at = time.time()
-        self.timer_thread.start()
 
         print("The game has started!")
         player_X, player_O = [
@@ -126,23 +139,40 @@ class GameService(GameServiceServicer):
             self.game.player_O.id, "The game has started! Player O, please standby!"
         )
 
-    def refresh_timer(self, role, timeout_in_mins):
-        if role == 'players' and not self.is_player:
+        self._register_game_event()
+        self._start_timeout_timer()
+
+    def update_timer(self, role, timeout_in_mins):
+        if role == "players":
             self.time_out = timeout_in_mins * 60
-            print(f'Set players timeout to {timeout_in_mins} mins')
+            print(f"Set players timeout to {timeout_in_mins} mins")
+        elif role == "game-master":
+            self.time_out = timeout_in_mins * 60
+            print(f"Set game master timeout to {timeout_in_mins} mins")
 
-    def _master_timer_job(self, timeout):
+    def _register_game_event(self):
+        self.last_game_event_at = time.time()
+
+    def _start_timeout_timer(self):
+        self.timer_thread = Thread(target=self._master_timer_job)
+        self.timer_thread.start()
+
+    def _master_timer_job(self):
         while True:
-            diff = time.time() - self.last_player_action_at
-            if diff > self.time_out:
-                if not self.game.is_finished():
-                    print('The game has timed out!')
+            if (not self.game and not self.is_player) or not self.last_game_event_at:
+                return  # game ended
 
+            diff = time.time() - self.last_game_event_at
+            timeout = self.player_time_out if self.is_player else self.game_master_time_out
+            if diff > timeout:
+                print("The game has timed out!")
+                if self.game:
                     for p in self.game.players:
-                        self._send_end_game_message(p.id, 'The game has timed out!') 
-                    self.game = None
-                break
-            time.sleep(1)
+                        self._send_end_game_message(p.id, "The game has timed out!")
+                self.reset()
+                return
+            else:
+                time.sleep(1)
 
     def _create_stub(self, channel) -> GameServiceStub:
         return GameServiceStub(channel)

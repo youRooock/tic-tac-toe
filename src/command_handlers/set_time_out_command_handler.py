@@ -7,4 +7,4 @@ class SetTimeOutCommandHandler(Handler):
 
     def handle(self, args):
         role, timeout_in_mins = args[0], int(args[1])
-        self.game_service.refresh_timer(role, timeout_in_mins)
+        self.game_service.update_timer(role, timeout_in_mins)
