@@ -95,9 +95,9 @@ class GameService(GameServiceServicer):
 
     def get_board(self, request, context):
         if not self.game:
-            raise grpc.RpcError("Sory, the game is not in progress!")
+            raise grpc.RpcError("Sorry, the game is not in progress!")
 
-        return InformMessage(f"Board:\n{str(self.game.board)}")
+        return InformMessage(message=f"Game history log:\n{str(self.game)}\nBoard:\n{str(self.game.board)}")
 
     def set_user_turn(self, position):
         try:
@@ -113,7 +113,7 @@ class GameService(GameServiceServicer):
         if not self.game and not self.is_player:
             print("Game is not in progress!")
         elif self.server_id == self.get_game_master_id():
-            print(str(self.game.board))
+            print(f"Game history log:\n{str(self.game)}\nBoard:\n{str(self.game.board)}")
         else:
             try:
                 resp = self._send_get_board_message(self.get_game_master_id())

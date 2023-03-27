@@ -1,5 +1,6 @@
 from player import Player
 from tic_tac_toe_board import TicTacToeBoard
+from datetime import datetime
 
 
 class Game:
@@ -46,6 +47,15 @@ class Game:
 
     def get_opposite_player(self, player: Player):
         return self.player_X if self.player_O == player else self.player_O
+    
+    def __str__(self):
+        turns = []
+
+        for turn in self.turns:
+            turns.append(f'{datetime.fromtimestamp(turn.timestamp)}: Player #{turn.player.id} played {turn.player.mark.value} at the position {turn.position}')
+        
+        return "\n".join(turns)
+
 
 
 class Turn:
