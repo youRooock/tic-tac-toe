@@ -42,6 +42,9 @@ class GameService(GameServiceServicer):
         self.last_game_event_at = None
         self.timer_thread = None
 
+    def is_game_in_progress(self):
+        return self.game or self.is_player
+
     def set_mark(self, request, context):
         if not self.game:
             raise grpc.RpcError("Sory, the game is not in progress!")
@@ -97,7 +100,9 @@ class GameService(GameServiceServicer):
         if not self.game:
             raise grpc.RpcError("Sorry, the game is not in progress!")
 
-        return InformMessage(message=f"Game history log:\n{str(self.game)}\nBoard:\n{str(self.game.board)}")
+        return InformMessage(
+            message=f"Game history log:\n{str(self.game)}\nBoard:\n{str(self.game.board)}"
+        )
 
     def set_user_turn(self, position):
         try:

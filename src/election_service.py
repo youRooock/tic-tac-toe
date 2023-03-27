@@ -20,10 +20,12 @@ class ElectionService(ElectionServiceServicer):
 
         self.start_game_callback = None
         self.sync_clock_callback = None
+        self.is_game_in_progress = None
 
-    def configure(self, start_game_callback, sync_clock_callback):
+    def configure(self, start_game_callback, sync_clock_callback, is_game_in_progress):
         self.start_game_callback = start_game_callback
         self.sync_clock_callback = sync_clock_callback
+        self.is_game_in_progress = is_game_in_progress
 
     def get_leader_id(self):
         return self.leader_id
@@ -61,7 +63,10 @@ class ElectionService(ElectionServiceServicer):
         return self._send_coordination_message(find_next(self.server_id), self.leader_id)
 
     def initiate(self):
-        self._send_election_message(find_next(self.server_id), self.server_id)
+        if not self.is_game_in_progress():
+            self._send_election_message(find_next(self.server_id), self.server_id)
+        else:
+            print("The game is already in progress!")
 
     def _create_stub(self, channel) -> ElectionServiceStub:
         return ElectionServiceStub(channel)

@@ -43,6 +43,7 @@ if __name__ == "__main__":
     election_service.configure(
         start_game_callback=game_service.initiate,
         sync_clock_callback=clock_service.sync_clock,
+        is_game_in_progress=game_service.is_game_in_progress,
     )
 
     handlers: Dict[str, Handler] = {
