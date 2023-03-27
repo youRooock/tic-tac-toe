@@ -44,7 +44,7 @@ class TicTacToeBoard:
     def __str__(self):
         rows = []
         for i in range(0, 9, 3):
-            row = " | ".join([str(x) if x else '.' for x in self.cells[i:i+3]])
+            row = " | ".join([str(x) if x else "." for x in self.cells[i : i + 3]])
             rows.append(row)
         board_str = "\n---------\n".join(rows)
         return board_str
